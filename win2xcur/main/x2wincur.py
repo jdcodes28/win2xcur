@@ -25,6 +25,7 @@ def main() -> None:
                         help='Align image sizes to Windows default cursor sizes.')
 
     args = parser.parse_args()
+    os.makedirs(args.output, exist_ok=True)
     print_lock = Lock()
 
     def process(file: BinaryIO) -> None:
@@ -40,7 +41,7 @@ def main() -> None:
             if args.scale:
                 scale.apply_to_frames(cursor.frames, scale=args.scale)
             if args.align_sizes:
-                align.apply_to_frames(cursor.frames, name)
+                align.apply_to_frames(cursor.frames)
             ext, result = to_smart(cursor.frames)
             output = os.path.join(args.output, os.path.basename(name) + ext)
             with open(output, 'wb') as f:

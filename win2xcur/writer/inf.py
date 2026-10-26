@@ -24,8 +24,8 @@ Scheme.Cur = {root},"%CUR_DIR%"
 {files}
 
 [Strings]
-CUR_DIR = "Cursors\\{name}"
-SCHEME_NAME = "{name}"
+CUR_DIR = "Cursors\\{inf_name}"
+SCHEME_NAME = "{inf_name}"
 {mapping}
 """
 
@@ -50,8 +50,8 @@ Scheme.Cur = {root},"%CUR_DIR%"
 {files}
 
 [Strings]
-CUR_DIR = "Cursors\\{name}"
-SCHEME_NAME = "{name}"
+CUR_DIR = "Cursors\\{inf_name}"
+SCHEME_NAME = "{inf_name}"
 """
 
 
@@ -84,13 +84,17 @@ def export_windows_theme(theme: CursorTheme, directory: Path, user: bool = False
         'key': (r'Control Panel\Cursors\Schemes' if user
                 else r'SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cursors\Schemes'),
         'name': theme.name,
+        'inf_name': theme.name.replace('%', '%%').replace('"', '""'),
         'list': cursor_list,
         'mapping': inf_mapping,
         'files': '\n'.join(files),
     }
 
-    with open(directory / 'install.inf', 'w') as f:
+    # Windows reads INF files as ANSI unless they are UTF-16 with a byte order mark.
+    encoding = 'ascii' if theme.name.isascii() else 'utf-16'
+
+    with open(directory / 'install.inf', 'w', encoding=encoding) as f:
         f.write(INSTALL_INF_TEMPLATE.format(**format_args))
 
-    with open(directory / 'uninstall.inf', 'w') as f:
+    with open(directory / 'uninstall.inf', 'w', encoding=encoding) as f:
         f.write(UNINSTALL_INF_TEMPLATE.format(**format_args))

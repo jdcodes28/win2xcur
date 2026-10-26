@@ -42,12 +42,12 @@ def main() -> None:
         if args.scale:
             scale.apply_to_frames(cursor.frames, scale=args.scale)
         if args.align_sizes:
-            align.apply_to_frames(cursor.frames, name)
+            align.apply_to_frames(cursor.frames)
 
     with ThreadPool(cpu_count()) as pool:
         pool.map(process, ALL_CURSORS)
 
-    args.output.mkdir(exist_ok=True)
+    args.output.mkdir(parents=True, exist_ok=True)
     export_windows_theme(theme, args.output, user=args.user)
 
 

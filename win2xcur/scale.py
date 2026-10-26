@@ -6,10 +6,9 @@ from win2xcur.cursor import CursorFrame
 def apply_to_frames(frames: List[CursorFrame], *, scale: float) -> None:
     for frame in frames:
         for cursor in frame:
-            cursor.image.scale(
-                int(round(cursor.image.width * scale)),
-                int(round(cursor.image.height * scale)),
-            )
+            width = max(1, round(cursor.image.width * scale))
+            height = max(1, round(cursor.image.height * scale))
+            cursor.image.scale(width, height)
 
             hx, hy = cursor.hotspot
-            cursor.hotspot = (int(hx * scale), int(hy * scale))
+            cursor.hotspot = (min(round(hx * scale), width - 1), min(round(hy * scale), height - 1))

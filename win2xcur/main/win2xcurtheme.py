@@ -20,7 +20,7 @@ def main() -> None:
     parser.add_argument('-s', '--shadow', action='store_true',
                         help="Whether to emulate Windows's shadow effect")
     parser.add_argument('-O', '--shadow-opacity', type=int, default=50,
-                        help='Opacity of the shadow (0 to 255)')
+                        help='Opacity of the shadow as a percentage (0 to 100)')
     parser.add_argument('-r', '--shadow-radius', type=float, default=0.1,
                         help='Radius of shadow blur effect (as fraction of width)')
     parser.add_argument('-S', '--shadow-sigma', type=float, default=0.1,
@@ -36,6 +36,9 @@ def main() -> None:
 
     args = parser.parse_args()
 
+    if not 0 <= args.shadow_opacity <= 100:
+        parser.error(f'shadow opacity must be between 0 and 100, got {args.shadow_opacity}')
+
     if not args.inf.is_file():
         sys.exit(f'INF file not found: {args.inf}')
 
@@ -43,6 +46,8 @@ def main() -> None:
 
     if not theme.arrow:
         sys.exit(f'Basic pointer cursor not found in theme: {args.inf}')
+
+    args.output.mkdir(parents=True, exist_ok=True)
 
     def process(name: str, aliases: list[str]) -> None:
         cursor = getattr(theme, name)
@@ -54,7 +59,8 @@ def main() -> None:
 
         if args.shadow:
             shadow.apply_to_frames(cursor.frames, color=args.shadow_color, radius=args.shadow_radius,
-                                   sigma=args.shadow_sigma, xoffset=args.shadow_x, yoffset=args.shadow_y)
+                                   sigma=args.shadow_sigma, xoffset=args.shadow_x, yoffset=args.shadow_y,
+                                   opacity=args.shadow_opacity)
 
         result = to_x11(cursor.frames)
         canonical = aliases[0]

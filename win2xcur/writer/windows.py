@@ -20,7 +20,7 @@ def to_cur(frame: CursorFrame) -> bytes:
         image_data.append(blob)
         x_offset, y_offset = image.hotspot
         directory.append(CURParser.ICON_DIR_ENTRY.pack(
-            clone.height & 0xFF, clone.height & 0xFF, 0, 0, x_offset, y_offset, len(blob), offset
+            clone.width & 0xFF, clone.height & 0xFF, 0, 0, x_offset, y_offset, len(blob), offset
         ))
         offset += len(blob)
 

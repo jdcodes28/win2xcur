@@ -13,6 +13,8 @@ def to_x11(frames: List[CursorFrame]) -> bytes:
     for frame in frames:
         for cursor in frame:
             hx, hy = cursor.hotspot
+            if not (0 <= hx <= cursor.image.width and 0 <= hy <= cursor.image.height):
+                raise ValueError(f'Hotspot {cursor.hotspot} outside {cursor.image.width}x{cursor.image.height} image')
             header = XCursorParser.IMAGE_HEADER.pack(
                 XCursorParser.IMAGE_HEADER.size,
                 XCursorParser.CHUNK_IMAGE,

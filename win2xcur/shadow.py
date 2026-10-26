@@ -14,7 +14,7 @@ else:
 
 
 def apply_to_image(image: BaseImage, *, color: str, radius: float, sigma: float, xoffset: float,
-                   yoffset: float) -> Image:
+                   yoffset: float, opacity: float = 50) -> Image:
     xoffset = round(xoffset * image.width)
     yoffset = round(yoffset * image.height)
     new_width = image.width + 3 * xoffset
@@ -26,14 +26,14 @@ def apply_to_image(image: BaseImage, *, color: str, radius: float, sigma: float,
     else:
         channel = image.channel_images['opacity']
 
-    opacity = Image(width=new_width, height=new_height, pseudo='xc:white')
-    opacity.composite(channel, left=xoffset, top=yoffset)
-    opacity.gaussian_blur(radius * image.width, sigma * image.width)
-    opacity.negate()
-    opacity.modulate(50)
+    alpha = Image(width=new_width, height=new_height, pseudo='xc:white')
+    alpha.composite(channel, left=xoffset, top=yoffset)
+    alpha.gaussian_blur(radius * image.width, sigma * image.width)
+    alpha.negate()
+    alpha.modulate(opacity)
 
     shadow = Image(width=new_width, height=new_height, pseudo='xc:' + color)
-    shadow.composite(opacity, operator=COPY_ALPHA)
+    shadow.composite(alpha, operator=COPY_ALPHA)
 
     result = Image(width=new_width, height=new_height, pseudo='xc:transparent')
     result.composite(shadow)
@@ -41,13 +41,14 @@ def apply_to_image(image: BaseImage, *, color: str, radius: float, sigma: float,
 
     trimmed = result.clone()
     trimmed.trim(color=Color('transparent'))
-    result.crop(width=max(image.width, trimmed.width), height=max(image.height, trimmed.height))
+    result.crop(width=max(image.width, trimmed.page_x + trimmed.width),
+                height=max(image.height, trimmed.page_y + trimmed.height))
     return result
 
 
 def apply_to_frames(frames: List[CursorFrame], *, color: str, radius: float,
-                    sigma: float, xoffset: float, yoffset: float) -> None:
+                    sigma: float, xoffset: float, yoffset: float, opacity: float = 50) -> None:
     for frame in frames:
         for cursor in frame:
             cursor.image = apply_to_image(cursor.image, color=color, radius=radius,
-                                          sigma=sigma, xoffset=xoffset, yoffset=yoffset)
+                                          sigma=sigma, xoffset=xoffset, yoffset=yoffset, opacity=opacity)

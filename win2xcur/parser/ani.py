@@ -78,13 +78,11 @@ class ANIParser(BaseParser):
         order = list(range(frame_count))
         delays = [display_rate for _ in range(step_count)]
 
-        while offset < len(self.blob):
-            name, size, offset = self._read_chunk(offset, expected=[self.LIST_CHUNK, self.SEQ_CHUNK, self.RATE_CHUNK])
-            if name == self.LIST_CHUNK:
+        while offset + self.CHUNK_HEADER.size <= len(self.blob):
+            name, size = self._unpack(self.CHUNK_HEADER, offset)
+            offset += self.CHUNK_HEADER.size
+            if name == self.LIST_CHUNK and self.blob[offset:offset + 4] == self.FRAME_TYPE:
                 list_end = offset + size
-                if self.blob[offset:offset + 4] != self.FRAME_TYPE:
-                    raise ValueError(
-                        f'Unexpected RIFF list type: {self.blob[offset:offset + 4]!r}, expected {self.FRAME_TYPE!r}')
                 offset += 4
 
                 for i in range(frame_count):
@@ -106,9 +104,20 @@ class ANIParser(BaseParser):
                 if len(delays) != step_count:
                     raise ValueError(f'Wrong animation rate size: {len(delays)}, expected {step_count}')
                 offset += size
+            else:
+                # Skip chunks we don't use, such as LIST chunks of type INFO holding the title and author.
+                offset += size
+            if offset & 1:
+                offset += 1
+
+        if len(frames) != frame_count:
+            raise ValueError('Required chunk "LIST" of type "fram" not found.')
 
         if len(order) != step_count:
             raise ValueError('Required chunk "seq " not found.')
+
+        if any(i >= frame_count for i in order):
+            raise ValueError(f'Animation sequence refers to a frame beyond the {frame_count} frames present')
 
         sequence = [frames[i].clone() for i in order]
         for frame, delay in zip(sequence, delays):

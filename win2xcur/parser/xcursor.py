@@ -30,7 +30,8 @@ class XCursorParser(BaseParser):
 
     def _parse(self) -> List[CursorFrame]:
         magic, header_size, version, toc_size = self._unpack(self.FILE_HEADER, 0)
-        assert magic == self.MAGIC
+        if magic != self.MAGIC:
+            raise ValueError('Not an Xcursor file')
 
         if version != self.VERSION:
             raise ValueError(f'Unsupported Xcursor version 0x{version:08x}')
@@ -71,7 +72,7 @@ class XCursorParser(BaseParser):
                 raise ValueError(f'Hotspot x-coordinate too large: {x_offset}')
 
             if y_offset > height:
-                raise ValueError(f'Hotspot x-coordinate too large: {y_offset}')
+                raise ValueError(f'Hotspot y-coordinate too large: {y_offset}')
 
             image_start = position + self.IMAGE_HEADER.size
             image_size = width * height * 4
@@ -84,6 +85,9 @@ class XCursorParser(BaseParser):
             images_by_size[nominal_size].append(
                 (CursorImage(image.sequence[0], (x_offset, y_offset), nominal_size), delay)
             )
+
+        if not images_by_size:
+            raise ValueError('Xcursor file contains no images')
 
         if len(set(map(len, images_by_size.values()))) != 1:
             raise ValueError('win2xcur does not support animations where each size has different number of frames')

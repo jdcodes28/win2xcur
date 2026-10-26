@@ -11,7 +11,7 @@ def print_images(images: list[CursorImage], prefix: str = '') -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description='Converts Windows cursors to X11 cursors.')
+    parser = argparse.ArgumentParser(description='Shows image sizes, hotspots, and animation delays of cursors.')
     parser.add_argument('files', type=argparse.FileType('rb'), nargs='+',
                         help='Cursor files to inspect (*.cur, *.ani, or any X11 cursor)')
     args = parser.parse_args()
